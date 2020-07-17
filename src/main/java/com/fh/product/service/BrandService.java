@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.fh.product.bean.brand.BrandPo;
 import com.fh.shiro.bean.user.PageBean;
 
+import java.util.List;
+
 public interface BrandService  {
     IPage<BrandPo> queryBrandList(PageBean pageBean);
 
@@ -16,4 +18,6 @@ public interface BrandService  {
     void updateBrandStatus(Integer id);
 
     void updateBrandFactoryStatus(Integer id);
+
+    List<BrandPo> queryBrandOption();
 }

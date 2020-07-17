@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <!-- 为这个mapper指定一个唯一的namespace，namespace的值习惯上设置成包名+sql映射文件名，这样就能够保证namespace的值是唯一的
 	例如namespace="com.szh.mapper.personMapper"就是com.szh.mapper(包名)+personMapper(personMapper.xml文件去除后缀) -->
-<mapper namespace="com.fh.product.mapper.BrandMapper">
+<mapper namespace="com.fh.product.mapper.ProductMapper">
   <!--
   id:sql语句唯一标识
   parameterType:指定传入参数类型(对应javaBean类型，写其所在的路径 写原始型会自动包装为包装类)
@@ -10,8 +10,10 @@ o  resultType：返回结果类型
   #{}:占位符，起到占位作用，如果传入的是原始型，那么括号中的变量名称可以随意定义
 -->
 
-  <select id="queryBrandList" resultType="com.fh.product.bean.brand.BrandPo">
-    select * from t_brand
+  <select id="queryProductList" resultType="com.fh.product.bean.product.ProductVo">
+select p.id,p.price,p.productImg,p.productName,p.stock,p.unit,p.weight,b.brandName,c.classifyName  from t_product p
+LEFT JOIN t_brand b on  p.brandId = b.id
+LEFT JOIN t_classify c on p.classifyId = c.id
   </select>
 
 </mapper>

@@ -31,7 +31,7 @@ public class LoginController {
             return ResponseServer.failedWithoutData();
         }
         String s = MD5Util.MD5Encode(MD5Util.MD5Encode(user.getPassword(), "utf-8"), "utf-8");
-        UsernamePasswordToken token = new UsernamePasswordToken(user.getUserName(),s);
+            UsernamePasswordToken token = new UsernamePasswordToken(user.getUserName(),s);
         try {
             Subject subject = SecurityUtils.getSubject();
             subject.login(token);

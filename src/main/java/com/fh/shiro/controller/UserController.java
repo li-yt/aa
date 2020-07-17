@@ -86,6 +86,7 @@ public class UserController {
         return userService.queryUserById(id);
     }
     /**根据id删除id*/
+    //aaaaa
     @RequestMapping("deleteById")
     @ResponseBody
     @RequiresPermissions("admin:user:delete")

@@ -11,7 +11,7 @@ o  resultType：返回结果类型
 -->
 
   <select id="queryTypeList" resultType="com.fh.product.bean.type.TypePo">
-    select typename,
+    select typename,id,
 	(select count(*) from t_attribute where typeId = t.id and attrType = 0) attributeCount,
 	(select count(*) from t_attribute where typeId = t.id  and attrType = 1) paramCount,
 	status

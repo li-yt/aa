@@ -78,4 +78,9 @@ public class ClassifyServiceImpl implements ClassifyService {
         }
         classifyMapper.updateById(classifyPo);
     }
+
+    @Override
+    public List<ClassifyPo> queryClassifyOption() {
+        return classifyMapper.selectList(null);
+    }
 }

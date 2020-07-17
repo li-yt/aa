@@ -9,6 +9,8 @@ import com.fh.shiro.bean.user.PageBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class BrandServiceImpl implements BrandService {
 
@@ -65,6 +67,11 @@ public class BrandServiceImpl implements BrandService {
             brandPo.setFactoryStatus(1);
         }
         brandMapper.updateById(brandPo);
+    }
+
+    @Override
+    public List<BrandPo> queryBrandOption() {
+        return brandMapper.selectList(null);
     }
 
 

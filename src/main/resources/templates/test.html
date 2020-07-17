@@ -16,6 +16,7 @@ Welcome<br/>
 
     //判断当前浏览器是否支持WebSocket
     if('WebSocket' in window){
+		//sockjs
         onlinenum = new WebSocket("ws://localhost:1111/websocket");
     }
     else{
@@ -51,7 +52,6 @@ Welcome<br/>
     function setMessageInnerHTML(innerHTML){
         document.getElementById('message').innerHTML += innerHTML + '<br/>';
     }
-
     //关闭连接
     function closeWebSocket(){
         onlinenum.close();

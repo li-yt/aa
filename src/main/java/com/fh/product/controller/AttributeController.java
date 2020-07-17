@@ -28,7 +28,7 @@ public class AttributeController {
         attributeService.addAttribute(attributePo);
         return ResponseServer.successWithoutData();
     }
-
+    //aa
     @RequestMapping("queryAttributeById")
     public AttributePo queryAttributeById(Integer id){
         return attributeService.queryAttributeById(id);

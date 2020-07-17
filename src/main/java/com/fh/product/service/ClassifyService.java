@@ -22,4 +22,6 @@ public interface ClassifyService {
     void updateClasifyStatus(Integer id);
 
     void updateClassifyNavStatus(Integer id);
+
+    List<ClassifyPo> queryClassifyOption();
 }

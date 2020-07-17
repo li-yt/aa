@@ -15,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -65,5 +66,10 @@ public class BrandController {
     @RequestMapping("updateBrandFactoryStatus")
     public  void updateBrandFactoryStatus(Integer id){
         brandService.updateBrandFactoryStatus(id);
+    }
+
+    @RequestMapping("queryBrandOption")
+    public List<BrandPo> queryBrandOption(){
+        return brandService.queryBrandOption();
     }
 }

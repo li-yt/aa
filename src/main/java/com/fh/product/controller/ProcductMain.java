@@ -27,4 +27,9 @@ public class ProcductMain {
         return "product/attribute";
     }
 
+    @RequestMapping("toProduct")
+    public String toProduct(){
+        return "product/product";
+    }
+
 }

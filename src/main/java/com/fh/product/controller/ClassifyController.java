@@ -58,4 +58,9 @@ public class ClassifyController {
         classifyService.updateClassifyNavStatus(id);
     }
 
+    @RequestMapping("queryClassifyOption")
+    public List<ClassifyPo> queryClassifyOption(){
+        return classifyService.queryClassifyOption();
+    }
+
 }

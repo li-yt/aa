@@ -40,7 +40,7 @@ public class UserRealm extends AuthorizingRealm {
         //获取当前登录的用户
         UserPo userPo = (UserPo) SecurityUtils.getSubject().getPrincipal();
         //获取当前用户所拥有的角色
-        List<RolePo> rolePoList = roleMapper.queryRoleListByUserId(userPo.getId());
+                List<RolePo> rolePoList = roleMapper.queryRoleListByUserId(userPo.getId());
         //获取当前用户所拥有的权限
         List<RightPo> rightPoList = rightMapper.queryRightListByUserId(userPo.getId());
         //给用户授权
