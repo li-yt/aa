@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <div class="layui-card-header"  style="background: #1e9fff">分类管理</div>
+    <div class="layui-card-body">
+        <div class="layui-card-body">
+            <script type="text/html" id="barDemo">
+                <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+                <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+            </script>
+            <table class="layui-hide" id="myTable" lay-filter="myTable"> </table>
+        </div>
+    </div>
+</body>
+<script type="text/html" id="myToolbar">
+    <button type="button" class="layui-btn layui-btn-sm layui-btn-green" id = "addClassify" lay-event="add">新增品牌</button>&nbsp;
+</script>
+<script type="text/html" id="addClassifyHtml">
+    <form class="layui-form layui-form-pane" id="addClassifyForm">
+        <div class="layui-form-item">
+            <label class="layui-form-label">分类名称</label>
+            <div class="layui-input-block">
+                <input type="hidden" name="id" autocomplete="off" id="id" placeholder="请输入部门名称" class="layui-input">
+                <input type="text" name="classifyName" autocomplete="off" id="name" placeholder="" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">上级分类</label>
+            <div class="layui-input-block">
+                <select name="pid" id="pid" lay-filter="aihao">
+
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">分类单位</label>
+            <div class="layui-input-block">
+                <input type="text" name="productUnit" autocomplete="off" id="productUnit" placeholder="" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">排序</label>
+            <div class="layui-input-block">
+                <input type="text" name="sort" autocomplete="off" id="sort" placeholder="" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item" pane="">
+            <label class="layui-form-label">是否在导航栏展示</label>
+            <div class="layui-input-block" lay-ignore="">
+                <input type="radio" name="navStatus" value="1" title="是">
+                <input type="radio" name="navStatus" value="2" title="否" >
+
+            </div>
+        </div>
+        <div class="layui-form-item" pane="">
+            <label class="layui-form-label">是否展示</label>
+            <div class="layui-input-block" lay-ignore="">
+                <input type="radio" name="status" value="1" title="是">
+                <input type="radio" name="status" value="2" title="否" >
+
+            </div>
+        </div>
+    </form>
+</script>
+<script type="text/html" id="switchFactoryStatus">
+    <input type="checkbox" id="navStatus" name="navStatus" value="{{d.navStatus}}" lay-skin="switch" lay-text="是|否" lay-filter="navStatus" {{d.navStatus == 1?"checked":""}}>
+</script>
+<script type="text/html" id="switchStatus">
+    <input type="checkbox" id="status" name="status" value="{{d.status}}" lay-skin="switch" lay-text="正常|无效" lay-filter="status" {{d.status == 1?"checked":""}}>
+</script>
+<script type="text/html" id="showCount">
+    {{# if(d.level == 0){ }}
+    <button type="button"onclick="showChirldren('{{d.id}}')" class="layui-btn layui-btn-warm layui-btn-radius">查看下级目录</button>
+    {{#}}}
+    {{# if(d.level == 1){ }}
+    <button type="button"onclick="resetChildren('{{d.id}}')" class="layui-btn layui-btn-warm layui-btn-radius">返回上级目录</button>
+    {{#}}}
+</script>
+<script>
+    var classifySetting = {
+        data: {
+            simpleData: {
+                enable: true,
+                idKey: "id",
+                pIdKey: "pid",
+            }
+        },
+    };
+    var myTable;
+    layui.use(['form','table','laydate','upload'],function () {
+            //日期的初始化
+            var laydate = layui.laydate;
+            //表格的初始化
+            var table = layui.table;
+            //表单的初始化
+            var form = layui.form;
+            //文件上传的初始化
+            var upload = layui.upload;
+        myTable = table.render({
+            elem: '#myTable'
+            , url: '/classify/queryClassifyList',
+            page: { //支持传入 laypage 组件的所有参数（某些参数除外，如：jump/elem） - 详见文档
+                layout: ['limit', 'count', 'prev', 'page', 'next', 'skip'] //自定义分页布局
+            },
+            toolbar: "#myToolbar",
+            limit: 5,
+            limits: [5, 10, 15]
+            , size: 'lg'
+            ,where:{
+                "level" : 0,
+                "pid": 1,
+            }
+            , cols: [
+                [
+                    {field: 'id', fixed: 'left', title: 'ID', rowspan: "2"}
+                    , {field: 'classifyName', title: '分类名', rowspan: "2"}
+                    ,{field: 'productUnit', title: '单位', rowspan: "2"}
+                    ,{field: 'level', title: '等级', rowspan: "2", templet:function (d) {
+                                if (d.level == 0){
+                                    return "一级目录";
+                                }else {
+                                    return "二级目录";
+                                }
+                    }}
+                    ,{field: 'sort', title: '排序', rowspan: "2"}
+                    ,{field: 'productCount', title: '商品数量', rowspan: "2"}
+                    ,{field: 'navStatus',title: '导航栏', rowspan: "2", templet: '#switchFactoryStatus'}
+                    , {field: 'status', rowspan: "2", title: "状态",templet: "#switchStatus"}
+                    , { rowspan: "2", title: "工具",templet: "#showCount"}
+                    , {fixed: 'right', rowspan: "2", title: '操作', width: 200, align: 'center', toolbar: '#barDemo'}
+                ],
+            ]
+            , page: true
+        });
+            $("#addClassify").on('click',function () {
+                    layer.open({
+                        title: "新增角色",
+                        content: $("#addClassifyHtml").html(),
+                        area: ["40%", "50%"],
+                        btn: ["保存", "取消"],
+                        yes: function (index, layero) {
+                            $.ajax({
+                                url: "/classify/addClassify",
+                                type: "post",
+                                dataType: "json",
+                                data: $("#addClassifyForm").serialize(),
+                                success: function (result) {
+                                    if (result.code = 200) {
+                                        table.reload("myTable", {
+                                            page: {
+                                                curr: 1
+                                            }
+                                        })
+                                        $("#addClassifyHtml").html( $("#addClassifyHtml").html());
+                                        layer.closeAll();
+                                    }
+                                },
+                                errorL: function () {
+                                }
+                            })
+                        },
+                        success: function () {
+                            $.ajax({
+                                url: "/classify/queryLevelClassify",
+                                type: "post",
+                                dataType: "json",
+                                success: function (result) {
+                                    var optionHtml = "<option value = '0'>无上级分类</option>";
+                                    for (var i = 0; i < result.length; i++) {
+                                        optionHtml += "<option value='"+result[i].id+"'>"+result[i].classifyName+"</option>";
+                                    }
+                                    $("#pid").html(optionHtml);
+                                    form.render();
+                                },
+                                errorL: function () {
+                                }
+                            })
+                            form.render();
+                        }
+                    })
+
+
+            })
+        table.on('tool(myTable)', function(obj){
+            var data = obj.data;
+            if(obj.event === 'edit'){
+                /*layer.alert('编辑行：<br>'+ JSON.stringify(data));*/
+                layer.open({
+                    title: "修改分类",
+                    content: $("#addClassifyHtml").html(),
+                    area: ["80%", "80%"],
+                    btn: ["保存", "取消"],
+                    yes: function (index, layero) {
+
+                        $.ajax({
+                            url: "/classify/addClassify",
+                            type: "post",
+                            dataType: "json",
+                            data: $("#addClassifyForm").serialize(),
+                            success: function (result) {
+                                if (result.code = 200) {
+
+                                }
+                            },
+                            errorL: function () {
+
+                            }
+                        })
+                    },
+                    success: function () {
+                        $.ajax({
+                            url: "/classify/queryLevelClassify",
+                            type: "post",
+                            dataType: "json",
+                            data: $("#addClassifyForm").serialize(),
+                            success: function (result) {
+                                var optionHtml = "<option value = '0'>无上级分类</option>";
+                                for (var i = 0; i < result.length; i++) {
+                                    optionHtml += "<option value='"+result[i].id+"'>"+result[i].classifyName+"</option>";
+                                }
+                                $("#pid").html(optionHtml);
+                                form.render();
+                            },
+                            errorL: function () {
+                            }
+                        })
+                        $.ajax({
+                            url: "/classify/queryClassifyById",
+                            type: "post",
+                            dataType: "json",
+                            data: {"id":data.id},
+                            success: function (result) {
+                                if (result.code == 200) {
+                                    $("#id").val(result.data.id);
+                                    $("#pid").val(result.data.pid);
+                                    $("#name").val(result.data.classifyName);
+                                    $("#productUnit").val(result.data.productUnit);
+                                    $("#sort").val(result.data.sort);
+                                    $("[name=status][value = "+result.data.status+"]").attr("checked",true);
+                                    $("[name=navStatus][value = "+result.data.navStatus+"]").attr("checked",true);
+                                }else {
+                                }
+                                form.render();
+                            },
+                            errorL: function () {
+
+                            }
+                        })
+
+                        form.render();
+                    }
+                })
+            } else if(obj.event === 'del'){
+                layer.confirm('真的删除行么', function(index){
+                    var id = data.id
+                    $.ajax({
+                        type:"post",
+                        url:"/brand/deleteById",
+                        data:{"id":id},
+                        dataType:"json",
+                        success:function(res){
+                            if(res.code==200){
+                                table.reload("myTable", {
+                                    page: {
+                                        curr: 1
+                                    }
+                                })
+                                layer.closeAll();
+                            }
+                        },
+                        error:function(){
+                            alert("删除失败")
+                        }
+                    })
+                });
+            }
+        });
+        form.on('switch(status)',function (obj) {
+            var id = obj.othis.parents('tr').find("td :first").text();
+            $.ajax({
+                type:"post",
+                url:"/classify/updateClasifyStatus",
+                data:{"id":id},
+                async:false,
+                dataType:"json",
+                success:function(res){
+
+                },
+                error:function(){
+
+                }
+            })
+        })
+        form.on('switch(navStatus)',function (obj) {
+            var id = obj.othis.parents('tr').find("td :first").text();
+            $.ajax({
+                type:"post",
+                url:"/classify/updateClassifyNavStatus",
+                data:{"id":id},
+                async:false,
+                dataType:"json",
+                success:function(res){
+
+                },
+                error:function(){
+
+                }
+            })
+        })
+
+        })
+    function showChirldren(id) {
+        myTable.reload( {
+            where:
+                {
+                    "pid":id,
+                    "level":1
+                }
+        })
+    }
+    function resetChildren() {
+        myTable.reload( {
+            where:
+                {
+                    "pid":1,
+                    "level":0
+                }
+        })
+    }
+</script>
+</html>

@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div class="layui-card-header"  style="background: #1e9fff">用户管理</div>
+<div class="layui-card-body">
+    <script type="text/html" id="barDemo">
+        <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+        <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+    </script>
+    <table class="layui-hide" id="myTable" lay-filter="myTable"> </table>
+</div>
+<script type="text/html" id="myToolbar">
+    <button type="button" class="layui-btn layui-btn-sm layui-btn-green" lay-event="add">新增品牌</button>&nbsp;
+</script>
+<script type="text/html" id="addBrandHtml">
+    <form class="layui-form layui-form-pane" id="addBrandForm">
+        <div class="layui-form-item">
+            <label class="layui-form-label">品牌名</label>
+            <div class="layui-input-block">
+                <input type="text" name="brandName" id="brandName" autocomplete="off" placeholder="" class="layui-input">
+                <input type="hidden" name="id" id="id" autocomplete="off" placeholder="" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">品牌首字母</label>
+            <div class="layui-input-block">
+                <input type="text" name="firstLetter" id="firstLetter" autocomplete="off" placeholder="" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">排序</label>
+            <div class="layui-input-block">
+                <input type="text" name="sort" id="sort" autocomplete="off" placeholder="" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item" pane="">
+            <label class="layui-form-label">是否为品牌制造商</label>
+            <div class="layui-input-block" lay-ignore="">
+                <input type="radio" name="factoryStatus" value="1" title="是">
+                <input type="radio" name="factoryStatus" value="2" title="否" >
+
+            </div>
+        </div>
+        <div class="layui-form-item" pane="">
+            <label class="layui-form-label">是否展示</label>
+            <div class="layui-input-block" lay-ignore="">
+                <input type="radio" name="status" value="1" title="是">
+                <input type="radio" name="status" value="2" title="否" >
+
+            </div>
+        </div>
+        <div class="layui-upload">
+            <button type="button" class="layui-btn" id="test1">上传图片</button>
+            <div class="layui-upload-list">
+                <img class="layui-upload-img" id="demo1">
+                <input type="text" id="logo" name="logo">
+                <p id="demoText"></p>
+                <div id="showImg">
+                </div>
+            </div>
+        </div>
+    </form>
+</script>
+<script type="text/html" id="switchFactoryStatus">
+    <input type="checkbox" id="factoryStatus" name="factoryStatus" value="{{d.factoryStatus}}" lay-skin="switch" lay-text="是|否" lay-filter="factoryStatus" {{d.factoryStatus == 1?"checked":""}}>
+</script>
+<script type="text/html" id="switchStatus">
+    <input type="checkbox" id="status" name="status" value="{{d.status}}" lay-skin="switch" lay-text="正常|无效" lay-filter="status" {{d.status == 1?"checked":""}}>
+</script>
+<script type="text/html" id="showCount">
+    商品：{{d.productCount}}
+    评论：{{d.productCommentCount}}
+</script>
+</body>
+<script>
+    layui.use(['form','table','laydate','upload'],function () {
+        //日期的初始化
+        var laydate = layui.laydate;
+        //表格的初始化
+        var table = layui.table;
+        //表单的初始化
+        var form = layui.form;
+        //文件上传的初始化
+        var upload = layui.upload;
+        //用户表格的初始化
+        myTable = table.render({
+            elem: '#myTable'
+            , url: '/brand/queryBrandList',
+            page: { //支持传入 laypage 组件的所有参数（某些参数除外，如：jump/elem） - 详见文档
+                layout: ['limit', 'count', 'prev', 'page', 'next', 'skip'] //自定义分页布局
+            },
+            toolbar: "#myToolbar",
+            limit: 5,
+            limits: [5, 10, 15]
+            , size: 'lg'
+            , cols: [
+                [
+                    {field: 'id', fixed: 'left', title: 'ID', rowspan: "2",hide :"true"}
+                    ,{type: 'checkbox', fixed: 'left', rowspan: "2"},
+                    , {field: 'brandName', title: '商品名', rowspan: "2"}
+                    ,{field: 'firstLetter', title: '首字母', rowspan: "2"}
+                    ,{field: 'sort', title: '排序', rowspan: "2"}
+                    ,{field: 'factoryStatus',title: '是否为品牌制造商', rowspan: "2", templet: '#switchFactoryStatus'}
+                    , {field: 'status', rowspan: "2", title: "状态",templet: "#switchStatus"}
+                    , { templet : "#showCount",  title: "相关"}
+                    , {field: 'logo', rowspan: "2", title: 'logo'
+                    , templet: function (d) {
+                        return '<div onclick="photograph(this)"><img src=' + d.logo + '></div>'
+                    }
+                }
+                    , {fixed: 'right', rowspan: "2", title: '操作', width: 200, align: 'center', toolbar: '#barDemo'}
+                ],
+                ]
+            , page: true
+        });
+        form.on('switch(status)',function (obj) {
+            var status = $("#status").val();
+            var id = obj.othis.parents('tr').find("td :first").text();
+            $.ajax({
+                type:"post",
+                url:"/brand/updateBrandStatus",
+                data:{"id":id},
+                async:false,
+                dataType:"json",
+                success:function(res){
+
+                },
+                error:function(){
+
+                }
+            })
+        })
+        form.on('switch(factoryStatus)',function (obj) {
+            var id = obj.othis.parents('tr').find("td :first").text();
+               $.ajax({
+                    type:"post",
+                    url:"/brand/updateBrandFactoryStatus",
+                    data:{"id":id},
+                    async:false,
+                    dataType:"json",
+                    success:function(res){
+
+                    },
+                    error:function(){
+
+                    }
+                })
+        })
+        table.on('tool(myTable)', function(obj){
+            var data = obj.data;
+            if(obj.event === 'edit'){
+                /*layer.alert('编辑行：<br>'+ JSON.stringify(data));*/
+                layer.open({
+                    type: 1,
+                    content:$("#addBrandHtml").html(),
+                    area: ['80%', '80%'],
+                    btn: ['保存', '关闭'],
+                    //保存的函数
+                    yes:function (index, layero) {
+                        //调用添加的方法的ajax
+                        $.ajax({
+                            type:"post",
+                            url:"/brand/addBrand",
+                            data:$("#addBrandForm").serialize(),
+                            dataType:"json",
+                            success:function(res){
+                                if(res.code==200){
+                                    table.reload("myTable", {
+                                        page: {
+                                            curr: 1
+                                        }
+                                    })
+                                    layer.closeAll();
+                                }
+                            },
+                            error:function(){
+
+                            }
+                        })
+
+
+                    },
+                    //保存的函数
+                    btn2:function (index, layero) {
+                        alert("关闭")
+
+                    },
+                    //打开页面就会加载的函数
+                    success:function (index, layero) {
+                        $.ajax({
+                            type:"post",
+                            url:"/brand/queryBrandById",
+                            data:{"id":data.id},
+                            async:false,
+                            dataType:"json",
+                            success:function(res){
+                                $("#id").val(res.id);
+                                $("#brandName").val(res.brandName);
+                                $("#firstLetter").val(res.firstLetter);
+                                $("#sort").val(res.sort);
+                                $("[name=status][value = "+res.status+"]").attr("checked",true);
+                                $("[name=factoryStatus][value = "+res.factoryStatus+"]").attr("checked",true);
+                                $("#logo").val(res.logo);
+                                $("#showImg").html("<img src='"+res.logo+"'>");
+                                form.render();
+                            },
+                            error:function(){
+                                alert("删除失败")
+                            }
+                        })
+                        //掉用一下查询 下拉框的 ajax 方法
+                        fileUpload();
+                        form.render();
+                    }
+                })
+            } else if(obj.event === 'del'){
+                layer.confirm('真的删除行么', function(index){
+                    var id = data.id
+                    $.ajax({
+                        type:"post",
+                        url:"/brand/deleteById",
+                        data:{"id":id},
+                        dataType:"json",
+                        success:function(res){
+                            if(res.code==200){
+                                table.reload("myTable", {
+                                    page: {
+                                        curr: 1
+                                    }
+                                })
+                                layer.closeAll();
+                            }
+                        },
+                        error:function(){
+                            alert("删除失败")
+                        }
+                    })
+                });
+            }
+        });
+
+        table.on('toolbar(myTable)', function(obj){
+            var checkStatus = table.checkStatus(obj.config.id);
+            switch(obj.event){
+                case 'add':
+                    layer.open({
+                        type: 1,
+                        content: $("#addBrandHtml").html() //这里content是一个普通的String
+                        , area: ["90%", "90%"]
+                        , offset: 'lt',
+                        title: "新增商品"
+                        , btn: ['保存', '关闭']
+                        , yes: function (index, layero) {
+                            $.ajax({
+                                data: $("#addBrandForm").serialize(),
+                                type: "post",
+                                dataType: "json",
+                                url: "/brand/addBrand",
+                                success: function (result) {
+                                    if (result.code = 200) {
+                                        table.reload("myTable", {
+                                            page: {
+                                                curr: 1
+                                            }
+                                        })
+                                        layer.closeAll();
+                                    }
+                                },
+                                error: function () {
+                                    alert("新增失败")
+                                }
+
+                            })
+
+                        },
+                        success: function (layero, index) {
+                            fileUpload();
+                            form.render();
+                        }
+                    })
+                    break;
+                default:
+                    break;
+            };
+        });
+        function fileUpload(){
+            upload.render({
+                elem: '#test1'
+                ,url: '/brand/upLoad' //改成您自己的上传接口
+                , accept: 'images'
+                , acceptMime: 'image/*'
+                ,before: function(obj){
+                    //预读本地文件示例，不支持ie8
+                    obj.preview(function(index, file, result){
+                        $('#demo1').attr('src', result); //图片链接（base64）
+                    });
+                }
+                ,done: function(res){
+                    //如果上传失败
+                    if(res.code > 0){
+                        return layer.msg('上传失败');
+                    }else{
+                        //上传成功  保存路径
+                        $("#logo").val(res.img);
+
+                    }
+                }
+                ,error: function(){
+                    //演示失败状态，并实现重传
+                    var demoText = $('#demoText');
+                    demoText.html('<span style="color: #FF5722;">上传失败</span> <a class="layui-btn layui-btn-xs demo-reload">重试</a>');
+                    demoText.find('.demo-reload').on('click', function(){
+                        uploadInst.upload();
+                    });
+                }
+            });
+
+        }
+    })
+</script>
+<!--设置图片样式-->
+<!--设置图片样式-->
+<style type="text/css">
+
+    .layui-table-cell{
+
+        text-align:center;
+
+        height: auto;
+
+        white-space: normal;
+
+    }
+    .layui-table img{
+
+        max-width:30px
+
+    }
+    </style>
+</html>

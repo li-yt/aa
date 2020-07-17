@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 为这个mapper指定一个唯一的namespace，namespace的值习惯上设置成包名+sql映射文件名，这样就能够保证namespace的值是唯一的
+	例如namespace="com.szh.mapper.personMapper"就是com.szh.mapper(包名)+personMapper(personMapper.xml文件去除后缀) -->
+<mapper namespace="com.fh.shiro.mapper.UserRoleMapper">
+  <!--
+  id:sql语句唯一标识
+  parameterType:指定传入参数类型(对应javaBean类型，写其所在的路径 写原始型会自动包装为包装类)
+o  resultType：返回结果类型
+  #{}:占位符，起到占位作用，如果传入的是原始型，那么括号中的变量名称可以随意定义
+-->
+
+        <select id="queryOrganTree" resultType="com.fh.shiro.bean.userRole.UserRoleVo">
+            select CONCAT("dept_",id) id,deptName name, CONCAT("dept_",pid) pid , 0 sex ,1 type from t_dept
+            UNION ALL
+            select  CONCAT("user_",id) id,realname name , CONCAT("dept_",deptId) deptId,sex ,2 type from t_user
+        </select>
+
+        <insert id="addUserRole" parameterType="java.util.List">
+            insert t_user_role (userId,roleId) values
+            <foreach collection="list" item="list" separator=",">
+                (#{list.userId},#{list.roleId})
+            </foreach>
+        </insert>
+
+        <delete id="deleteUserRoleByUserId" parameterType="string">
+            delete from  t_user_role where userId = #{userId}
+        </delete>
+
+        <delete id="deleteUserRoleByRoleId" parameterType="int">
+            delete from  t_user_role where roleId = #{roleId}
+        </delete>
+</mapper>

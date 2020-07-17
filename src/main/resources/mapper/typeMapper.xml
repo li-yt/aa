@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 为这个mapper指定一个唯一的namespace，namespace的值习惯上设置成包名+sql映射文件名，这样就能够保证namespace的值是唯一的
+	例如namespace="com.szh.mapper.personMapper"就是com.szh.mapper(包名)+personMapper(personMapper.xml文件去除后缀) -->
+<mapper namespace="com.fh.product.mapper.TypeMapper">
+  <!--
+  id:sql语句唯一标识
+  parameterType:指定传入参数类型(对应javaBean类型，写其所在的路径 写原始型会自动包装为包装类)
+o  resultType：返回结果类型
+  #{}:占位符，起到占位作用，如果传入的是原始型，那么括号中的变量名称可以随意定义
+-->
+
+  <select id="queryTypeList" resultType="com.fh.product.bean.type.TypePo">
+    select typename,
+	(select count(*) from t_attribute where typeId = t.id and attrType = 0) attributeCount,
+	(select count(*) from t_attribute where typeId = t.id  and attrType = 1) paramCount,
+	status
+    from t_type t
+  </select>
+
+
+</mapper>

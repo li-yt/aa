@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div class="layui-card-header"  style="background: #1e9fff">类型属性管理</div>
+<div class="layui-card-body">
+    <div class="layui-card-body">
+        <script type="text/html" id="barDemo">
+            <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+            <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+        </script>
+        <table class="layui-hide" id="myTable" lay-filter="myTable"> </table>
+    </div>
+    <script type="text/html" id="myToolbar">
+        <button type="button" class="layui-btn layui-btn-sm layui-btn-green" id = "addClassify" lay-event="add">新增品牌</button>&nbsp;
+        <button type="button" class="layui-btn layui-btn-sm layui-btn-green"  lay-event="goType">返回类型</button>&nbsp;
+    </script>
+</div>
+</body>
+<script type="text/html" id="addAttributeHtml">
+    <form class="layui-form layui-form-pane" id="addAttributeForm">
+        <div class="layui-form-item">
+            <label class="layui-form-label">属性名</label>
+            <div class="layui-input-block">
+                <input type="text" name="attrName" id="attrName" autocomplete="off" placeholder="" class="layui-input">
+                <input type="hidden" name="attrType" id="attrType" autocomplete="off" placeholder="" class="layui-input">
+                <input type="hidden" name="id" id="id" autocomplete="off" placeholder="" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">属性类型</label>
+            <div class="layui-input-block">
+                <input type="text" name="typeName"readonly  id="typeName" autocomplete="off" placeholder="" class="layui-input">
+                <input type="hidden" name="typeId" id="typeId" autocomplete="off" placeholder="" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">分类筛选样式</label>
+            <div class="layui-input-block" lay-ignore="">
+                <input type="radio" name="filterType" value="0" title="普通">
+                <input type="radio" name="filterType" value="1" title="颜色" >
+            </div>
+        </div>
+        <div class="layui-form-item" pane="">
+            <label class="layui-form-label">能否进行检索</label>
+            <div class="layui-input-block" lay-ignore="">
+                <input type="radio" name="searchType" value="0" title="不需要检索">
+                <input type="radio" name="searchType" value="1" title="关键字检索" >
+                <input type="radio" name="searchType" value="2" title="范围检索" >
+            </div>
+        </div>
+        <div class="layui-form-item" pane="">
+            <label class="layui-form-label">商品关联属性</label>
+            <div class="layui-input-block" lay-ignore="">
+                <input type="radio" name="relatedStatus" value="0" title="是">
+                <input type="radio" name="relatedStatus" value="1" title="否" >
+
+            </div>
+        </div>
+        <div class="layui-form-item" pane="">
+            <label class="layui-form-label">属性是否可选</label>
+            <div class="layui-input-block" lay-ignore="">
+                <input type="radio" name="selectType" value="0" title="唯一">
+                <input type="radio" name="selectType" value="1" title="单选" >
+                <input type="radio" name="selectType" value="2" title="复选" >
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">属性录入方式</label>
+            <div class="layui-input-block" lay-ignore="">
+                <input type="radio" name="inputType" value="0" title="手动输入">
+                <input type="radio" name="inputType" value="1" title="从下面列表选取" >
+
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">属性可选值列表</label>
+            <div class="layui-input-block">
+                <input type="text" name="inputList" id="inputList" autocomplete="off" placeholder="" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">是否支持手动新增</label>
+            <div class="layui-input-block" lay-ignore="">
+                <input type="radio" name="handAddStatus" value="0" title="是">
+                <input type="radio" name="handAddStatus" value="1" title="否" >
+
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">排序属性</label>
+            <div class="layui-input-block">
+                <input type="text" name="sort" id="sort" autocomplete="off" placeholder="" class="layui-input">
+            </div>
+        </div>
+    </form>
+</script>
+<script>
+    var typeId = sessionStorage.getItem("typeId");
+    var attrType = sessionStorage.getItem("attrType");
+    var myTable;
+    layui.use(['form','table','laydate','upload'],function () {
+        //日期的初始化
+        var laydate = layui.laydate;
+        //表格的初始化
+        var table = layui.table;
+        //表单的初始化
+        var form = layui.form;
+        //文件上传的初始化
+        var upload = layui.upload;
+        myTable = table.render({
+            elem: '#myTable'
+            , url: '/attribute/queryAttributeList',
+            page: { //支持传入 laypage 组件的所有参数（某些参数除外，如：jump/elem） - 详见文档
+                layout: ['limit', 'count', 'prev', 'page', 'next', 'skip'] //自定义分页布局
+            },
+            toolbar: "#myToolbar",
+            limit: 5,
+            limits: [5, 10, 15]
+            , size: 'lg'
+            ,where:{
+                "typeId":typeId,
+                "attrType":attrType
+            }
+            , cols: [
+                [
+                    {field: 'id', fixed: 'left', title: 'ID', rowspan: "2"}
+                    , {field: 'attrName', title: '类型属性名称', rowspan: "2"}
+                    , {field: 'selectType', title: "属性选择类型", rowspan: "2",templet:function (d) {
+                        if (d.selectType == 0){
+                            return "唯一";
+                        }else if (d.selectType == 1){
+                            return "单选";
+                        }else if (d.selectType == 2){
+                            return "多选";
+                        }
+                    }}
+                    , {field: 'inputType', title: '属性录入方式', rowspan: "2",templet:function (d) {
+                        if (d.inputType == 0){
+                            return "手工录入";
+                        }else if (d.inputType == 1){
+                            return "从列表中选取";
+                        }
+                    }}
+                    , {field: "inputList", rowspan: "2", title: "可选值列表"}
+                    , {field:"searchType",rowspan: "2", title: "检索类型",templet:function (d) {
+                        if (d.searchType == 0){
+                            return "不需要检索";
+                        }else if (d.searchType == 1){
+                            return "关键字检索";
+                        }else if (d.searchType == 2){
+                            return "范围检索";
+                        }
+                    }}
+                    , {field:"filterType",rowspan: "2", title: "分类筛选样式",templet:function (d) {
+                        if (d.filterType == 0){
+                            return "普通";
+                        }else if (d.filterType == 1){
+                            return "颜色";
+                        }
+                    }}
+                    , {field:"relatedStatus",rowspan: "2", title: "相同属性产品的是否关联",templet:function (d) {
+                        if (d.relatedStatus == 0){
+                            return "不关联";
+                        }else if (d.relatedStatus == 1){
+                            return "关联";
+                        }
+                    }}
+                    , {field:"handAddStatus",rowspan: "2", title: "是否支持手动新增",templet:function (d) {
+                        if (d.handAddStatus == 0){
+                            return "不支持";
+                        }else if (d.handAddStatus == 1){
+                            return "支持";
+                        }
+                    }}
+                    , {field:"sort",rowspan: "2", title: "排序"}
+                    , {fixed: 'right', rowspan: "2", title: '操作', width: 200, align: 'center', toolbar: '#barDemo'}
+                ],
+            ]
+            , page: true
+        });
+        function queryType(){
+            $.ajax({
+                type:"post",
+                url:"/type/queryTypeById",
+                data:{"id":typeId},
+                async:false,
+                dataType:"json",
+                success:function(res){
+                    $("#typeId").val(res.id);
+                    $("#typeName").val(res.typeName);
+                    form.render();
+                },
+                error:function(){
+                }
+            })
+        }
+        table.on('toolbar(myTable)', function(obj){
+            var checkStatus = table.checkStatus(obj.config.id);
+            switch(obj.event){
+                case 'add':
+                    layer.open({
+                        type: 1,
+                        content: $("#addAttributeHtml").html() //这里content是一个普通的String
+                        , area: ["90%", "90%"]
+                        , offset: 'lt',
+                        title: "新增商品"
+                        , btn: ['保存', '关闭']
+                        , yes: function (index, layero) {
+                            $.ajax({
+                                data: $("#addAttributeForm").serialize(),
+                                type: "post",
+                                dataType: "json",
+                                url: "/attribute/addAttribute",
+                                success: function (result) {
+                                    if (result.code = 200) {
+                                        table.reload("myTable", {
+                                            page: {
+                                                curr: 1
+                                            }
+                                        })
+                                        layer.closeAll();
+                                    }
+                                },
+                                error: function () {
+                                    alert("新增失败")
+                                }
+
+                            })
+
+                        },
+                        success: function (layero, index) {
+
+                            queryType();
+                            $("#attrType").val(attrType);
+                            form.render();
+                        }
+                    })
+                    break;
+                case "goType" :
+                    show("/productMain/toType");
+                    break;
+                default:
+                    break;
+            };
+        });
+        table.on('tool(myTable)', function(obj){
+            var data = obj.data;
+            if(obj.event === 'edit'){
+                /*layer.alert('编辑行：<br>'+ JSON.stringify(data));*/
+                layer.open({
+                    type: 1,
+                    content:$("#addAttributeHtml").html(),
+                    area: ['80%', '80%'],
+                    btn: ['保存', '关闭'],
+                    //保存的函数
+                    yes:function (index, layero) {
+                        //调用添加的方法的ajax
+                        $.ajax({
+                            type:"post",
+                            url:"/attribute/addAttribute",
+                            data:$("#addAttributeForm").serialize(),
+                            dataType:"json",
+                            success:function(res){
+                                if(res.code==200){
+                                    table.reload("myTable", {
+                                        page: {
+                                            curr: 1
+                                        }
+                                    })
+                                    layer.closeAll();
+                                }
+                            },
+                            error:function(){
+
+                            }
+                        })
+
+
+                    },
+                    //保存的函数
+                    btn2:function (index, layero) {
+                        alert("关闭")
+
+                    },
+                    //打开页面就会加载的函数
+                    success:function (index, layero) {
+                        $.ajax({
+                            type:"post",
+                            url:"/attribute/queryAttributeById",
+                            data:{"id":data.id},
+                            async:false,
+                            dataType:"json",
+                            success:function(res){
+                                $("#id").val(res.id);
+                                $("#typeName").val(res.typeName);
+                                $("#attrName").val(res.attrName);
+                                $("#inputList").val(res.inputList);
+                                $("#sort").val(res.sort);
+                                $("[name=selectType][value = "+res.selectType+"]").attr("checked",true);
+                                $("[name=relatedStatus][value = "+res.relatedStatus+"]").attr("checked",true);
+                                $("[name=handAddStatus][value = "+res.handAddStatus+"]").attr("checked",true);
+                                $("[name=filterType][value = "+res.filterType+"]").attr("checked",true);
+                                $("[name=searchType][value = "+res.searchType+"]").attr("checked",true);
+                                $("[name=inputType][value = "+res.inputType+"]").attr("checked",true);
+                                form.render();
+                            },
+                            error:function(){
+                                alert("删除失败")
+                            }
+                        })
+                        queryType();
+                        //掉用一下查询 下拉框的 ajax 方法
+                        form.render();
+                    }
+                })
+            } else if(obj.event === 'del'){
+                layer.confirm('真的删除行么', function(index){
+                    var id = data.id
+                    $.ajax({
+                        type:"post",
+                        url:"/brand/deleteById",
+                        data:{"id":id},
+                        dataType:"json",
+                        success:function(res){
+                            if(res.code==200){
+                                table.reload("myTable", {
+                                    page: {
+                                        curr: 1
+                                    }
+                                })
+                                layer.closeAll();
+                            }
+                        },
+                        error:function(){
+                            alert("删除失败")
+                        }
+                    })
+                });
+            }
+        });
+
+    })
+</script>
+</html>

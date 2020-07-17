@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 为这个mapper指定一个唯一的namespace，namespace的值习惯上设置成包名+sql映射文件名，这样就能够保证namespace的值是唯一的
+	例如namespace="com.szh.mapper.personMapper"就是com.szh.mapper(包名)+personMapper(personMapper.xml文件去除后缀) -->
+<mapper namespace="com.fh.shiro.mapper.RightMapper">
+  <!--
+  id:sql语句唯一标识
+  parameterType:指定传入参数类型(对应javaBean类型，写其所在的路径 写原始型会自动包装为包装类)
+o  resultType：返回结果类型
+  #{}:占位符，起到占位作用，如果传入的是原始型，那么括号中的变量名称可以随意定义
+-->
+
+  <select id="queryRightTree" resultType="java.util.Map" parameterType="int">
+       select r.id,r.rightName name,r.pid pId,if(rr.rightId is NULL,'false','true') checked
+       from t_right r
+      LEFT JOIN
+      (select roleId,rightId from t_role_right where roleId = #{roleId}) rr
+      on r.id = rr.rightId
+  </select>
+
+    <select id="queryRoleShowTree" parameterType="int" resultType="java.util.Map">
+        select DISTINCT ri.id,ri.rightname name,ri.pid pId from t_right ri
+        LEFT JOIN t_role_right rr on ri.id = rr.rightId
+        LEFT JOIN t_user_role ur ON rr.roleId = ur.roleId
+        where ur.userId = #{userId}
+    </select>
+    
+    <select id="queryRightListByUserId" parameterType="java.lang.Integer" resultType="com.fh.shiro.bean.right.RightPo">
+        select ri.* from t_right ri
+        LEFT JOIN t_role_right rr on ri.id = rr.rightId
+        LEFT JOIN t_user_role ur ON rr.roleId = ur.roleId
+        where ur.userId = #{id}
+    </select>
+
+    <select id="queryRightTreeByUserId" parameterType="java.lang.Integer" resultType="com.fh.shiro.bean.right.RightPo">
+        select DISTINCT ri.rightName,ri.id,ri.pid pId,ri.pathUrl from t_right ri
+        LEFT JOIN t_role_right rr on ri.id = rr.rightId
+        LEFT JOIN t_user_role ur ON rr.roleId = ur.roleId
+        where ur.userId = #{id} and ri.type = 1
+    </select>
+
+</mapper>

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<!--用来排版同时展示部门用户树和角色树-->
+<div class="layui-row layui-col-space5">
+    <div class="layui-col-md4" >
+        <div class="layui-card-header"  style="background: #1e9fff">用户展示</div>
+        <div class="layui-card-body">
+
+            <ul class="ztree" id="organTree"></ul>
+        </div>
+    </div>
+
+    <div class="layui-col-md4">
+        <div class="layui-card-header"  style="background: #1e9fff"> 分配角色</div>
+        <div class="layui-card-body" id="showRoleTreeDiv">
+            <ul class="ztree" id="roleTree"></ul>
+        </div>
+    </div> <div class="layui-col-md4" >
+        <div class="layui-card-header" style="background: #1e9fff">权限展示</div>
+        <div class="layui-card-body"id="showRightTreeDiv">
+            <ul class="ztree" id="rightTree"></ul>
+        </div>
+    </div>
+
+</div>
+</body>
+<script>
+    //部门和用户树的setting
+    var organSetting = {
+            callback:{
+                onClick : showRoleTree
+            }
+    };
+    //角色的setting
+    var roleSetting = {
+        check: {
+            enable: true,
+            chkStyle: "checkbox"
+        },
+        data: {
+            simpleData: {
+                enable: true,
+            }
+        },
+        view: {
+            showLine: false,
+            showIcon: false
+        }
+    };
+    //权限的sett
+    var rightSetting = {
+        data: {
+            simpleData: {
+                enable: true,
+            }
+        },
+    };
+    //layui的页面加载函数
+    layui.use(['form','table','laydate','upload'],function () {
+        //日期的初始化
+        var laydate = layui.laydate;
+        //表格的初始化
+        var table = layui.table;
+        //表单的初始化
+        var form = layui.form;
+        //文件上传的初始化
+        var upload = layui.upload;
+        //部门和用户树的查询
+        $.ajax({
+            url: "/userRole/queryOrganTree",
+            type: "post",
+            dataType: "json",
+            success: function (result) {
+                $.fn.zTree.init($("#organTree"), organSetting, result).expandAll(true);
+            },
+            errorL: function () {
+
+            }
+        })
+
+    })
+    //展示角色树的方法
+    function showRoleTree(event, treeId, treeNode) {
+        var id = treeNode.id;
+        var userId = id.substr(5);
+        var  roleTree =  '<ul class="ztree" id="roleTree"></ul>'
+        var  rightTree =  '<ul class="ztree" id="rightTree"></ul>'
+        var btn = '<button type="button" shiro:hasPermission = "admin:user:create:role" onclick="addUserRole()" class="layui-btn layui-btn-warm layui-btn-radius">给用户赋予权限</button>\n';
+        if (treeNode.type == 1){
+            $("#showRoleTreeDiv").html(roleTree);
+            $("#showRightTreeDiv").html(rightTree);
+        }else {
+            $("#showRoleTreeDiv").html(btn+roleTree);
+            showRight(userId);
+            $.ajax({
+                url: "/role/queryRoleTree",
+                type: "post",
+                dataType: "json",
+                data:{"userId":userId},
+                success: function (result) {
+                    $.fn.zTree.init($("#roleTree"), roleSetting, result).expandAll(true);
+                },
+                errorL: function () {
+
+                }
+            })
+        }
+    }
+    //给用户附加角色
+    function addUserRole() {
+       var ztreeObj = $.fn.zTree.getZTreeObj(`roleTree`);
+       var organTree = $.fn.zTree.getZTreeObj(`organTree`);
+        var nodes1 = organTree.getSelectedNodes();
+       var nodes = ztreeObj.getCheckedNodes(true);
+       var roleIds = [];
+        for (var i = 0; i < nodes.length; i++) {
+            var roleId = nodes[i].id;
+            roleIds.push(roleId);
+        }
+        var userId = nodes1[0].id.substring(5);
+        showRight(userId);
+        $.ajax({
+            url: "/userRole/addUserRole",
+            type: "post",
+            dataType: "json",
+            data:{"userId":userId,"roleIds":roleIds.toString()},
+            success: function (result) {
+                if (result.code == 200){
+                    alert("赋权成功")
+                    showRight(userId);
+                }
+            },
+            errorL: function () {
+
+            }
+        })
+    }
+    //展示用户附加的角色所拥有的的方法
+    function showRight(userId) {
+        $.ajax({
+            url: "/right/queryRoleShowTree",
+            type: "post",
+            dataType: "json",
+            data:{"userId":userId},
+            success: function (result) {
+                $.fn.zTree.init($("#rightTree"), rightSetting, result).expandAll(true);
+            },
+            errorL: function () {
+
+            }
+        })
+    }
+</script>
+</html>

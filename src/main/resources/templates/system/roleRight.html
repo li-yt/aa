@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<!--角色展示的div-->
+<div class="layui-row layui-col-space5">
+    <div class="layui-col-md4">
+        <div class="layui-card-header"  style="background: #1e9fff">角色展示</div>
+        <div class="layui-card-body">
+            <div class="layui-btn-group" >
+                <button type="button" shiro:hasPermission="admin:roel:create" class="layui-btn layui-btn-sm" id="addRole"><i class="layui-icon"></i></button>
+                <button type="button" shiro:hasPermission="admin:roel:update" class="layui-btn layui-btn-sm" id="updateRole"><i class="layui-icon"></i></button>
+            </div>
+            <ul class="ztree" id="roleTree"></ul>
+        </div>
+    </div>
+<!--权限展示的div-->
+    <div class="layui-col-md4">
+        <div class="layui-card-header"  style="background: #1e9fff">分配权限</div>
+        <div class="layui-card-body" id="showRoleTreeDiv">
+            <ul class="ztree" id="rightTree"></ul>
+        </div>
+    </div>
+    <!--用户展示的div-->
+    <div class="layui-col-md4">
+        <div class="layui-card-header"  style="background: #1e9fff">分配权限</div>
+        <div class="layui-card-body" id="showOrganTreeDiv">
+            <ul class="ztree" id="organTree"></ul>
+        </div>
+    </div>
+
+</div>
+<!--角色修改和新增的数据框-->
+<script type="text/html" id="addRoleHtmml">
+    <form class="layui-form layui-form-pane" id="addRoleForm">
+        <div class="layui-form-item">
+            <label class="layui-form-label">角色名称</label>
+            <div class="layui-input-block">
+                <input type="hidden" name="id" autocomplete="off" id="id" placeholder="请输入角色名称" class="layui-input">
+                <input type="text" name="roleName" autocomplete="off" id="roleName" placeholder="请输入角色名称" class="layui-input">
+            </div>
+        </div>
+    </form>
+</script>
+</body>
+<script>
+    //角色setting
+    var roleSetting = {
+        callback:{
+            onClick:showRightTree
+        },
+        view: {
+            showLine: false,
+        }
+    };
+    //权限的setting
+    var rightSetting = {
+        check: {
+            enable: true,
+            chkStyle: "checkbox",
+            chkboxType: { "Y": "p", "N": "s" }
+        },
+        data: {
+            simpleData: {
+                enable: true,
+            }
+        },
+    };
+    var organSetting = {
+        check: {
+            enable: true,
+            chkStyle: "checkbox",
+        },
+    };
+    layui.use(['form','table','laydate','upload'],function () {
+        //日期的初始化
+        var laydate = layui.laydate;
+        //表格的初始化
+        var table = layui.table;
+        //表单的初始化
+        var form = layui.form;
+        //文件上传的初始化
+        var upload = layui.upload;
+        //角色树的查询
+        $.ajax({
+            url: "/role/queryRoleTree",
+            type: "post",
+            dataType: "json",
+            data:{},
+            success: function (result) {
+                $.fn.zTree.init($("#roleTree"), roleSetting, result).expandAll(true);
+            },
+            errorL: function () {
+
+            }
+        })
+        //新增角色
+        $("#addRole").on('click',function () {
+            layer.open({
+                title: "新增角色",
+                content: $("#addRoleHtmml").html(),
+                area: ["40%", "50%"],
+                btn: ["保存", "取消"],
+                yes: function (index, layero) {
+
+                    $.ajax({
+                        url: "/role/addRole",
+                        type: "post",
+                        dataType: "json",
+                        data: $("#addRoleForm").serialize(),
+                        success: function (result) {
+                            if (result.code = 200) {
+                                var newNode = {
+                                    id: result.data.id,
+                                    name: result.data.roleName,
+                                    pid:0,
+                                    icon: "/static/orgimg/4.png"
+                                }
+                                var roleTreeObj =  $.fn.zTree.getZTreeObj("roleTree");
+                                roleTreeObj.addNodes(null, newNode);
+                                layer.alert("新增成功");
+                                layer.closeAll();
+
+                            }
+                        },
+                        errorL: function () {
+
+                        }
+                    })
+                },
+                success: function () {
+                }
+            })
+        })
+        //修改角色
+        $("#updateRole").on('click', function () {
+            var roleTreeObj =  $.fn.zTree.getZTreeObj("roleTree");
+            var nodes = roleTreeObj.getSelectedNodes();
+            if (nodes.length == 0 || nodes == null) {
+                layer.alert("请选择部门，在进行修改。")
+            } else {
+                layer.open({
+                    title: "新增部门",
+                    content: $("#addRoleHtmml").html(),
+                    area: ["40%", "50%"],
+                    btn: ["保存", "取消"],
+                    yes: function (index, layero) {
+
+                        $.ajax({
+                            url: "/role/addRole",
+                            type: "post",
+                            dataType: "json",
+                            data: $("#addRoleForm").serialize(),
+                            success: function (result) {
+                                if (result.code = 200) {
+                                    nodes[0].name = result.data.roleName;
+                                    roleTreeObj.updateNode(nodes[0]);
+                                    layer.alert("修改成功");
+                                    layer.closeAll();
+
+                                }
+                            },
+                            errorL: function () {
+
+                            }
+                        })
+                    },
+                    success: function () {
+                        $("#id").val(nodes[0].id);
+                        $.ajax({
+                            url: "/role/queryRoleById",
+                            type: "post",
+                            dataType: "json",
+                            data: {"id": $("#id").val()},
+                            success: function (result) {
+                                if (result.code == 200) {
+                                    $("#id").val(result.data.id);
+                                    $("#roleName").val(result.data.roleName);
+                                }else {
+                                }
+                            },
+                            errorL: function () {
+
+                            }
+                        })
+                    }
+                })
+            }
+        })
+    })
+    //展示权限的ztree
+    function showRightTree(event, treeId, treeNode) {
+        var id = treeNode.id;
+        var  rightTree =  '<ul class="ztree" id="rightTree"></ul>'
+        var btn = '<button type="button" onclick="addRoleRight()" class="layui-btn layui-btn-warm layui-btn-radius">给用户赋予权限</button>\n';
+        $("#showRoleTreeDiv").html(btn+rightTree);
+        showOrgan(id);
+        $.ajax({
+                url: "/right/queryRightTree",
+                type: "post",
+                dataType: "json",
+                data:{"id":id},
+                success: function (result) {
+                    $.fn.zTree.init($("#rightTree"), rightSetting, result).expandAll(true);
+                },
+                errorL: function () {
+
+                }
+            })
+
+    }
+    //展示用户
+    function showOrgan(roleId) {
+        var  organTree =  '<ul class="ztree" id="organTree"></ul>'
+        var btn = '<button type="button" onclick="addRoleUser()" class="layui-btn layui-btn-warm layui-btn-radius">给用户赋予权限</button>\n';
+        $("#showOrganTreeDiv").html(btn+organTree);
+       $.ajax({
+            url: "/role/queryOrganTree",
+            type: "post",
+            dataType: "json",
+           data:{"roleId":roleId},
+            success: function (result) {
+                $.fn.zTree.init($("#organTree"), organSetting, result).expandAll(true);
+            },
+            errorL: function () {
+
+            }
+        })
+    }
+    //给角色赋予权限
+    function addRoleRight() {
+        var ztreeObj = $.fn.zTree.getZTreeObj(`roleTree`);
+        var rightTree = $.fn.zTree.getZTreeObj(`rightTree`);
+        var nodes1 = ztreeObj.getSelectedNodes();
+        var nodes = rightTree.getCheckedNodes(true);
+        var rightIds = [];
+        for (var i = 0; i < nodes.length; i++) {
+            var roleId = nodes[i].id;
+            rightIds.push(roleId);
+        }
+        $.ajax({
+            url: "/roleRight/addRoleRight",
+            type: "post",
+            dataType: "json",
+            data:{"roleId":nodes1[0].id,"rightIds":rightIds.toString()},
+            success: function (result) {
+                if (result.code == 200){
+                    alert("赋权成功")
+                }
+            },
+            errorL: function () {
+
+            }
+        })
+    }
+    //将角色赋给用户
+    function addRoleUser() {
+        var ztreeObj = $.fn.zTree.getZTreeObj(`roleTree`);
+        var nodes = ztreeObj.getSelectedNodes();
+        var organTree = $.fn.zTree.getZTreeObj(`organTree`);
+        var organNodes = organTree.getCheckedNodes(true);
+        var userIds = [];
+        for (var i = 0; i < organNodes.length; i++) {
+            if (organNodes[i].type == 2){
+                var userIds = organNodes[i].id.substring(5);
+            }
+        }
+        $.ajax({
+            url: "/userRole/addRoleUser",
+            type: "post",
+            dataType: "json",
+            data:{"roleId":nodes[0].id,"userIds":userIds.toString()},
+            success: function (result) {
+                if (result.code == 200){
+                    alert("赋予角色成功成功")
+                }
+            },
+            errorL: function () {
+
+            }
+        })
+    }
+</script>
+</html>

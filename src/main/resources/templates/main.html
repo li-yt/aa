@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>电商后台管理</title>
+    <link rel="stylesheet" href="../static/layui/layui/layui/css/layui.css">
+    <link rel="stylesheet" href="../static/ztree/css/bootstrapStyle/bootstrapStyle.css">
+    <link rel="stylesheet" href="../static/plugin/index.css">
+
+
+    <script src="../static/js/jquery-3.3.1.min.js"></script>
+    <script src="../static/layui/layui/layui/layui.js"></script>
+    <script src="../static/ztree/js/jquery.ztree.all.js"></script>
+    <script src="../static/plugin/selectTree.js"></script>
+</head>
+<body class="layui-layout-body">
+<div class="layui-layout layui-layout-admin">
+    <div class="layui-header">
+        <div class="layui-logo">电商后台主页</div>
+        <!-- 头部区域（可配合layui已有的水平导航） -->
+        <ul class="layui-nav layui-layout-left">
+            <li class="layui-nav-item"><a onclick="show('/productMain/toClassify')">分类管理</a></li>
+            <li class="layui-nav-item"><a onclick="show('/productMain/toBrand')">品牌管理</a></li>
+            <li class="layui-nav-item"><a onclick="show('/productMain/toType')">类型管理</a></li>
+            <li class="layui-nav-item"><a onclick="show()">商品管理</a></li>
+            <li class="layui-nav-item"><a href="">用户</a></li>
+            <li class="layui-nav-item">
+                <a href="javascript:;">其它系统</a>
+                <dl class="layui-nav-child">
+                    <dd><a href="">邮件管理</a></dd>
+                    <dd><a href="">消息管理</a></dd>
+                    <dd><a href="">授权管理</a></dd>
+                </dl>
+            </li>
+        </ul>
+        <ul class="layui-nav layui-layout-right">
+            <li class="layui-nav-item">
+                <a href="javascript:;">
+                    <div id="showUserName">
+
+                    </div>
+                </a>
+                <dl class="layui-nav-child">
+                    <dd><a id="showUser">基本资料</a></dd>
+                    <dd><a href="">安全设置</a></dd>
+                </dl>
+            </li>
+            <li class="layui-nav-item"><a href="/logout">退了</a></li>
+            <li class="layui-nav-item"><a id = "updatePassword">修改密码</a></li>
+        </ul>
+    </div>
+
+    <div class="layui-side layui-bg-black">
+        <div class="layui-side-scroll">
+            <!-- 左侧导航区域（可配合layui已有的垂直导航） -->
+            <ul class="layui-nav layui-nav-tree"  lay-filter="test">
+                <li class="layui-nav-item layui-nav-itemed">
+                    <a class="" href="javascript:;">系统管理</a>
+                    <dl class="layui-nav-child" id="showDl">
+                    </dl>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="layui-body" id="showDiv">
+        <!-- 内容主体区域 -->
+        <div style="padding: 15px;"></div>
+    </div>
+
+    <div class="layui-footer">
+        <!-- 底部固定区域 -->
+        © layui.com - 底部固定区域
+    </div>
+</div>
+<script type="text/html" id="addRightHtmml">
+    <form class="layui-form layui-form-pane" id="addRightForm">
+        <div class="layui-form-item">
+            <label class="layui-form-label">旧密码</label>
+            <div class="layui-input-block">
+                <input type="hidden" name="id" autocomplete="off" id="id" placeholder="请输入角色名称" class="layui-input">
+                <input type="password" name="oldPassword" autocomplete="off" id="oldPassword" placeholder="" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">新密码</label>
+            <div class="layui-input-block">
+                <input type="password" name="newPassword" autocomplete="off" id="newPassword" placeholder="" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">确认新密码</label>
+            <div class="layui-input-block">
+                <input type="password" name="newPassword" autocomplete="off" id="checkPassword" placeholder="" class="layui-input">
+            </div>
+        </div>
+    </form>
+</script>
+<script>
+    var rightSetting = {
+        view: {
+        },
+        callback :{
+            onClick : show
+        },
+        view: {
+            showLine: false,
+            showIcon: false
+        }
+    };
+    //JavaScript代码区域
+    layui.use(['element','tree'] ,function(){
+        var element = layui.element;
+        var tree = layui.tree;
+        var userName = sessionStorage.getItem("userName");
+        var imgUrl = sessionStorage.getItem("img");
+        var userId = sessionStorage.getItem("id");
+        var imgInput = "<img src = '"+imgUrl+"' class='layui-nav-img'/>"+userName;
+        $("#showUserName").html(imgInput);
+        $.ajax({
+            url: "/right/queryRightTreeByUserId",
+            type: "post",
+            dataType: "json",
+            data:{"userId":userId},
+            success: function (result) {
+                if (result.code == 200){
+                    showUrl(result.data,1);
+                }
+            },
+            errorL: function () {
+
+            }
+        })
+        $("#updatePassword").on('click',function () {
+            layer.open({
+                title: "新增角色",
+                content: $("#addRightHtmml").html(),
+                area: ["40%", "50%"],
+                btn: ["保存", "取消"],
+                yes: function (index, layero) {
+                    var oldPassword = $("#oldPassword").val();
+                    var newPassword = $("#newPassword").val();
+                    var checkPassword = $("#checkPassword").val();
+                    if(oldPassword == null && oldPassword == ""){
+                        alert("旧密码不能为空");
+                        return false;
+                    }else if(newPassword == null && newPassword == ""){
+                        alert("新密码不能为空");
+                        return false;
+                    }else if(checkPassword == null && checkPassword == ""){
+                        alert("确认密码不能为空");
+                        return false;
+                    }else if (oldPassword == newPassword){
+                        alert("不能和旧密码一样");
+                        return false;
+                    }else if (checkPassword != newPassword){
+                        alert("确认密码和新密码不一致");
+                        return false;
+                    }else {
+                        $.ajax({
+                            url:"/user/queryPasswordById",
+                            data:{"id":userId,"newPassword":newPassword,"oldPassword":oldPassword},
+                            type: "post",
+                            dataType: "json",
+                            success:function (result) {
+                                if (result.code == 200){
+                                    layer.msg(
+                                        result.msg+"!系统即将自动退出!",
+                                        {    icon: 1,
+                                            shade: [0.8, '#393D49'],// 透明度  颜色
+                                            offset:['20%'],
+                                            time: 1000 //5秒关闭（如果不配置，默认是3秒）
+                                        },function(){
+                                            window.location.href="/logout";
+                                        }
+
+                                    );
+                                }else {
+                                    alert("旧密码输入错误");
+                                }
+                            },
+                            error:function () {
+
+                            }
+                        })
+                    }
+                },
+                success: function () {
+                }
+            })
+
+        })
+    });
+    function show (pathUrl) {
+        $("#showDiv").load(pathUrl);
+    }
+    function showUrl(data,pid) {
+        var ddHtml = "";
+        for (var i = 0; i < data.length; i++) {
+                ddHtml += "<dd>";
+                ddHtml += "<a onclick='show(\""+data[i].pathUrl+"\")'>"+data[i].name+"</a>"
+                ddHtml += "</dd>"
+            }
+        $("#showDl").html(ddHtml);
+    }
+</script>
+</body>
+</html>
