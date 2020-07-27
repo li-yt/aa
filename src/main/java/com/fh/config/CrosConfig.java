@@ -28,7 +28,7 @@ public class CrosConfig {
     @Bean
     public CorsFilter corsFilter() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        // 4
+        // 4aaa
         source.registerCorsConfiguration("/**", buildConfig());
         return new CorsFilter(source);
     }
