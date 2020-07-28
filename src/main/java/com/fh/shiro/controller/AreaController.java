@@ -18,7 +18,7 @@ public class AreaController {
 
     @Autowired
     private AreaService areaService;
-    /**查询三级联动的省aa*/
+    /**查询三级联动的省*/
     @RequestMapping("queryProvince")
     @ResponseBody
     public List<Area> queryProvince(){
